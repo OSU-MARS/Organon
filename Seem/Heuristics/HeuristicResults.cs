@@ -14,28 +14,28 @@ namespace Osu.Cof.Ferm.Heuristics
         // Nullability in multidimensional arrays does not appear supported as of Visual Studio 16.10.1. See remarks in constructor.
         private readonly HeuristicResult[][][][][][] results;
 
-        public IList<HeuristicResultPosition> CombinationsEvaluated { get; private init; }
-        public GraspReactivity GraspReactivity { get; private init; }
-
         public FinancialScenarios FinancialScenarios { get; private init; }
         public IList<int> FirstThinPeriods { get; private init; }
         public IList<int> RotationLengths { get; private init; }
         public IList<int> SecondThinPeriods { get; private init; }
         public IList<int> ThirdThinPeriods { get; private init; }
 
+        public GraspReactivity GraspReactivity { get; private init; }
+        public IList<HeuristicResultPosition> PositionsEvaluated { get; private init; }
+
         protected HeuristicResults(int parameterCombinationCount, IList<int> firstThinPeriods, IList<int> secondThinPeriods, IList<int> thirdThinPeriods, IList<int> rotationLengths, FinancialScenarios financialScenarios, int individualPoolSize)
         {
             this.parameterCombinationCount = parameterCombinationCount;
             this.results = new HeuristicResult[parameterCombinationCount][][][][][];
-
-            this.CombinationsEvaluated = new List<HeuristicResultPosition>();
-            this.GraspReactivity = new();
 
             this.FinancialScenarios = financialScenarios;
             this.FirstThinPeriods = firstThinPeriods;
             this.RotationLengths = rotationLengths;
             this.SecondThinPeriods = secondThinPeriods;
             this.ThirdThinPeriods = thirdThinPeriods;
+
+            this.GraspReactivity = new();
+            this.PositionsEvaluated = new List<HeuristicResultPosition>();
 
             // fill result arrays where applicable
             //   parameter array elements: never null
@@ -102,8 +102,10 @@ namespace Osu.Cof.Ferm.Heuristics
 
         private HeuristicResult this[int parameterIndex, int firstThinPeriodIndex, int secondThinPeriodIndex, int thirdThinPeriodIndex, int rotationIndex, int financialIndex]
         {
-            get 
+            get
             {
+                Debug.Assert((parameterIndex >= 0) && (firstThinPeriodIndex >= 0) && (secondThinPeriodIndex >= 0) && (thirdThinPeriodIndex >= 0) && (rotationIndex >= 0) && (financialIndex >= 0));
+
                 HeuristicResult[][][][][] parameterResults = this.results[parameterIndex];
                 Debug.Assert(parameterResults != null, "Invalid parameter index " + parameterIndex + ".");
                 HeuristicResult[][][][] firstThinResults = parameterResults[firstThinPeriodIndex];
@@ -114,10 +116,12 @@ namespace Osu.Cof.Ferm.Heuristics
                 Debug.Assert(thirdThinResults != null, "Invalid third thin index " + thirdThinPeriodIndex + ".");
                 HeuristicResult[] rotationLengthResults = thirdThinResults[rotationIndex];
                 Debug.Assert(rotationLengthResults != null, "Invalid rotation index " + rotationIndex + ".");
-                return rotationLengthResults[financialIndex]; 
+                return rotationLengthResults[financialIndex];
             }
             set
             {
+                Debug.Assert((parameterIndex >= 0) && (firstThinPeriodIndex >= 0) && (secondThinPeriodIndex >= 0) && (thirdThinPeriodIndex >= 0) && (rotationIndex >= 0) && (financialIndex >= 0));
+
                 HeuristicResult[][][][][] parameterResults = this.results[parameterIndex];
                 Debug.Assert(parameterResults != null, "Invalid parameter index " + parameterIndex + ".");
                 HeuristicResult[][][][] firstThinResults = parameterResults[firstThinPeriodIndex];
@@ -130,6 +134,22 @@ namespace Osu.Cof.Ferm.Heuristics
                 Debug.Assert(rotationLengthResults != null, "Invalid rotation index " + rotationIndex + ".");
                 rotationLengthResults[financialIndex] = value; 
             }
+        }
+
+        // preferred to adding to PositionsEvaluated directly for argument checking
+        public void AddEvaluatedPosition(HeuristicResultPosition position)
+        {
+            if ((position.ParameterIndex < 0) || (position.ParameterIndex >= this.parameterCombinationCount) ||
+                (position.FirstThinPeriodIndex < 0) || (position.FirstThinPeriodIndex >= this.FirstThinPeriods.Count) ||
+                (position.SecondThinPeriodIndex < 0) || (position.SecondThinPeriodIndex >= this.SecondThinPeriods.Count) ||
+                (position.ThirdThinPeriodIndex < 0) || (position.ThirdThinPeriodIndex >= this.ThirdThinPeriods.Count) ||
+                (position.RotationIndex < 0) || (position.RotationIndex >= this.RotationLengths.Count) ||
+                (position.FinancialIndex < 0) || (position.FinancialIndex >= this.FinancialScenarios.Count))
+            {
+                throw new ArgumentOutOfRangeException(nameof(position));
+            }
+
+            this.PositionsEvaluated.Add(position);
         }
 
         public void AssimilateHeuristicRunIntoPosition(Heuristic heuristic, HeuristicPerformanceCounters perfCounters, HeuristicResultPosition position)
@@ -193,7 +213,8 @@ namespace Osu.Cof.Ferm.Heuristics
 
         // searches among financial scenarios and rotation lengths for solutions assigned to the same set of heuristic parameters and thinnings
         // Looking across parameters would confound heuristic parameter tuning runs by allowing later parameter sets to access solutions obtained
-        // by earlier runs. It's assumed parameter set evaluations should always be independent of each other.
+        // by earlier runs. It's assumed parameter set evaluations should always be independent of each other and, therefore, searches are
+        // restricted to be within thins, rotation lengths, and financial scenarios.
         public bool TryGetSelfOrFindNearestNeighbor(HeuristicResultPosition position, [NotNullWhen(true)] out HeuristicSolutionPool? neighborOrSelf, [NotNullWhen(true)] out HeuristicResultPosition? neighborOrSelfPosition)
         {
             neighborOrSelf = null;

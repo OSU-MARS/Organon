@@ -316,10 +316,10 @@ namespace Osu.Cof.Ferm.Heuristics
                     // this.ConstructionGreediness = Constant.Grasp.FullyRandomConstructionForMaximization;
 
                     // sync prescription to new thinning timings
-                    if (position.ThirdThinPeriodIndex != positionOfExistingSolutions.ThirdThinPeriodIndex)
+                    if (position.FirstThinPeriodIndex != positionOfExistingSolutions.FirstThinPeriodIndex)
                     {
-                        int currentThinPeriod = results.ThirdThinPeriods[position.ThirdThinPeriodIndex];
-                        int existingSolutionThinPeriod = results.ThirdThinPeriods[positionOfExistingSolutions.ThirdThinPeriodIndex];
+                        int currentThinPeriod = results.FirstThinPeriods[position.FirstThinPeriodIndex];
+                        int existingSolutionThinPeriod = results.FirstThinPeriods[positionOfExistingSolutions.FirstThinPeriodIndex];
                         this.CurrentTrajectory.ChangeThinningPeriod(existingSolutionThinPeriod, currentThinPeriod);
                     }
                     if (position.SecondThinPeriodIndex != positionOfExistingSolutions.SecondThinPeriodIndex)
@@ -328,10 +328,10 @@ namespace Osu.Cof.Ferm.Heuristics
                         int existingSolutionThinPeriod = results.SecondThinPeriods[positionOfExistingSolutions.SecondThinPeriodIndex];
                         this.CurrentTrajectory.ChangeThinningPeriod(existingSolutionThinPeriod, currentThinPeriod);
                     }
-                    if (position.FirstThinPeriodIndex != positionOfExistingSolutions.FirstThinPeriodIndex)
+                    if (position.ThirdThinPeriodIndex != positionOfExistingSolutions.ThirdThinPeriodIndex)
                     {
-                        int currentThinPeriod = results.FirstThinPeriods[position.FirstThinPeriodIndex];
-                        int existingSolutionThinPeriod = results.FirstThinPeriods[positionOfExistingSolutions.FirstThinPeriodIndex];
+                        int currentThinPeriod = results.ThirdThinPeriods[position.ThirdThinPeriodIndex];
+                        int existingSolutionThinPeriod = results.ThirdThinPeriods[positionOfExistingSolutions.ThirdThinPeriodIndex];
                         this.CurrentTrajectory.ChangeThinningPeriod(existingSolutionThinPeriod, currentThinPeriod);
                     }
                 }

@@ -17,9 +17,9 @@ namespace Osu.Cof.Ferm.Cmdlets
         protected override void ProcessRecord()
         {
             int poolCapacity = 0;
-            if (this.Results!.CombinationsEvaluated.Count > 0)
+            if (this.Results!.PositionsEvaluated.Count > 0)
             {
-                HeuristicResultPosition position = this.Results.CombinationsEvaluated[0];
+                HeuristicResultPosition position = this.Results.PositionsEvaluated[0];
                 poolCapacity = this.Results[position].Pool.PoolCapacity;
             }
 
@@ -46,9 +46,9 @@ namespace Osu.Cof.Ferm.Cmdlets
             long maxFileSizeInBytes = this.GetMaxFileSizeInBytes();
             string?[] financialValues = new string?[poolCapacity];
             string?[] distances = new string?[poolCapacity];
-            for (int resultIndex = 0; resultIndex < this.Results!.CombinationsEvaluated.Count; ++resultIndex)
+            for (int resultIndex = 0; resultIndex < this.Results!.PositionsEvaluated.Count; ++resultIndex)
             {
-                HeuristicResultPosition position = this.Results.CombinationsEvaluated[resultIndex];
+                HeuristicResultPosition position = this.Results.PositionsEvaluated[resultIndex];
                 HeuristicSolutionPool solutions = this.Results[position].Pool;
                 if (solutions.PoolCapacity != poolCapacity)
                 {

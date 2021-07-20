@@ -15,25 +15,26 @@ namespace Osu.Cof.Ferm.Cmdlets
         public int Age { get; set; }
 
         [Parameter]
-        [ValidateRange(0.0, Constant.Maximum.ExpansionFactor)]
+        [ValidateRange(0.1, Constant.Maximum.ExpansionFactor)]
         public float? ExpansionFactor { get; set; }
 
         [Parameter]
         public TreeModel Model { get; set; }
 
         [Parameter]
-        [ValidateRange(0.0F, Constant.Maximum.PlantingDensityInTreesPerHectare)]
+        [ValidateRange(1.0F, Constant.Maximum.PlantingDensityInTreesPerHectare)]
         public float? PlantingDensity { get; set; }
 
         [Parameter(Mandatory = true)]
+        [ValidateNotNullOrEmpty]
         public List<int>? Plots { get; set; }
 
         [Parameter]
-        [ValidateRange(0.0F, Constant.Maximum.SiteIndexInFeet)]
+        [ValidateRange(1.0F, Constant.Maximum.SiteIndexInFeet)]
         public float SiteIndex { get; set; }
 
         [Parameter]
-        [ValidateRange(0, Int32.MaxValue)]
+        [ValidateRange(1, Int32.MaxValue)]
         public int? Trees { get; set; }
 
         [Parameter(Mandatory = true)]

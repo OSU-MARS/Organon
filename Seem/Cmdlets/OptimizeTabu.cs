@@ -9,14 +9,17 @@ namespace Osu.Cof.Ferm.Cmdlets
     public class OptimizeTabu : OptimizeCmdlet<TabuParameters>
     {
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0F, 1.0F)]
         public List<float> EscapeAfter { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0F, 1.0F)]
         public List<float> EscapeBy { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0F, 10.0F)]
         public List<float> IterationMultipliers { get; set; }
 
@@ -25,6 +28,7 @@ namespace Osu.Cof.Ferm.Cmdlets
         //public int? Jump { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0F, 1.0F)]
         public List<float> MaxTenure { get; set; }
 
@@ -33,10 +37,10 @@ namespace Osu.Cof.Ferm.Cmdlets
 
         public OptimizeTabu()
         {
-            this.EscapeAfter = new List<float>() { Constant.TabuDefault.EscapeAfter };
-            this.EscapeBy = new List<float>() { Constant.TabuDefault.EscapeBy };
-            this.IterationMultipliers = new List<float>() { Constant.TabuDefault.IterationMultiplier };
-            this.MaxTenure = new List<float>() { Constant.TabuDefault.MaximumTenureRatio };
+            this.EscapeAfter = new() { Constant.TabuDefault.EscapeAfter };
+            this.EscapeBy = new() { Constant.TabuDefault.EscapeBy };
+            this.IterationMultipliers = new() { Constant.TabuDefault.IterationMultiplier };
+            this.MaxTenure = new() { Constant.TabuDefault.MaximumTenureRatio };
             this.Tenure = Constant.TabuDefault.Tenure;
         }
 

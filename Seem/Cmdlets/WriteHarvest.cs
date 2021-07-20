@@ -25,9 +25,9 @@ namespace Osu.Cof.Ferm.Cmdlets
             {
                 line.Append("period");
                 // harvest volume headers
-                for (int resultIndex = 0; resultIndex < this.Results.CombinationsEvaluated.Count; ++resultIndex)
+                for (int resultIndex = 0; resultIndex < this.Results.PositionsEvaluated.Count; ++resultIndex)
                 {
-                    HeuristicResultPosition position = this.Results.CombinationsEvaluated[resultIndex];
+                    HeuristicResultPosition position = this.Results.PositionsEvaluated[resultIndex];
                     Heuristic? highHeuristic = this.Results[position].Pool.High;
                     if (highHeuristic == null)
                     {
@@ -39,9 +39,9 @@ namespace Osu.Cof.Ferm.Cmdlets
                     line.Append("," + bestTrajectory.Name + "harvest");
                 }
                 // standing volume headers
-                for (int resultIndex = 0; resultIndex < this.Results.CombinationsEvaluated.Count; ++resultIndex)
+                for (int resultIndex = 0; resultIndex < this.Results.PositionsEvaluated.Count; ++resultIndex)
                 {
-                    HeuristicResultPosition position = this.Results.CombinationsEvaluated[resultIndex];
+                    HeuristicResultPosition position = this.Results.PositionsEvaluated[resultIndex];
                     OrganonStandTrajectory bestTrajectory = this.Results[position].Pool.High!.GetBestTrajectoryWithDefaulting(position);
                     line.Append("," + bestTrajectory.Name + "standing");
                 }
@@ -55,7 +55,7 @@ namespace Osu.Cof.Ferm.Cmdlets
                 line.Clear();
                 line.Append(periodIndex);
 
-                foreach (HeuristicResultPosition position in this.Results.CombinationsEvaluated)
+                foreach (HeuristicResultPosition position in this.Results.PositionsEvaluated)
                 {
                     Heuristic highHeuristic = this.Results[position].Pool.High!;
                     StandTrajectory bestTrajectory = highHeuristic.GetBestTrajectoryWithDefaulting(position);
@@ -63,7 +63,7 @@ namespace Osu.Cof.Ferm.Cmdlets
                     line.Append("," + harvestVolumeScibner.ToString(CultureInfo.InvariantCulture));
                 }
 
-                foreach (HeuristicResultPosition position in this.Results.CombinationsEvaluated)
+                foreach (HeuristicResultPosition position in this.Results.PositionsEvaluated)
                 {
                     Heuristic highHeuristic = this.Results[position].Pool.High!;
                     StandTrajectory bestTrajectory = highHeuristic.GetBestTrajectoryWithDefaulting(position);

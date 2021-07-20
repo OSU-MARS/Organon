@@ -95,13 +95,20 @@ namespace Osu.Cof.Ferm.Organon
 
         public override void ChangeThinningPeriod(int currentPeriod, int newPeriod)
         {
-            // move harvest prescriptions
+            // check for corresponding harvest prescription
+            // Harvests should already be shifted to the new period due to the call to CopyFrom().
+            bool matchingHarvestFound = false;
             foreach (IHarvest harvest in this.Treatments.Harvests)
             {
-                if (harvest.Period == currentPeriod)
+                if (harvest.Period == newPeriod)
                 {
-                    harvest.Period = newPeriod;
+                    matchingHarvestFound = true;
+                    break;
                 }
+            }
+            if (matchingHarvestFound == false)
+            {
+                throw new NotSupportedException("Harvest not found for period " + newPeriod + ".");
             }
 
             // move tree selection
@@ -124,37 +131,32 @@ namespace Osu.Cof.Ferm.Organon
                 // number of planning periods may differ: as many periods are copied as possible
                 throw new ArgumentOutOfRangeException(nameof(other));
             }
-            for (int harvestIndex = 0; harvestIndex < this.Treatments.Harvests.Count; ++harvestIndex)
-            {
-                IHarvest thisHarvest = this.Treatments.Harvests[harvestIndex];
-                IHarvest otherHarvest = other.Treatments.Harvests[harvestIndex];
-                if (thisHarvest.Period != otherHarvest.Period)
-                {
-                    throw new NotSupportedException(nameof(other));
-                }
-            }
 
             // for now, shallow copies where feasible
             this.organonCalibration = other.organonCalibration;
             this.organonGrowth = other.organonGrowth; // BUGBUG: has no state, should have run state which can be copied
 
             // deep copies of mutable state changed by modified tree selection and resimulation
-            // May need deep copy of treatment because 
-            // 1) thinning prescriptions are being evaluated and therefore the best prescription needs to be reported
-            // 2) BUGBUG: no Organon run state object has been implemented
             int copyablePeriods = Math.Min(this.PlanningPeriods, other.PlanningPeriods);
             Debug.Assert((this.BasalAreaRemoved.Length == this.PlanningPeriods) &&
                          (this.DensityByPeriod.Length == this.PlanningPeriods) &&
                          (this.StandByPeriod.Length == this.PlanningPeriods));
 
             this.Configuration.CopyFrom(other.Configuration);
+            this.EarliestPeriodChangedSinceLastSimulation = Math.Min(other.EarliestPeriodChangedSinceLastSimulation, this.PlanningPeriods);
+
+            for (int harvestIndex = 0; harvestIndex < this.Treatments.Harvests.Count; ++harvestIndex)
+            {
+                IHarvest thisHarvest = this.Treatments.Harvests[harvestIndex];
+                IHarvest otherHarvest = other.Treatments.Harvests[harvestIndex];
+                thisHarvest.CopyFrom(otherHarvest);
+            }
 
             foreach (KeyValuePair<FiaCode, TreeSelection> otherSelectionForSpecies in other.IndividualTreeSelectionBySpecies)
             {
                 TreeSelection thisSelectionForSpecies = this.IndividualTreeSelectionBySpecies[otherSelectionForSpecies.Key];
                 thisSelectionForSpecies.CopyFrom(otherSelectionForSpecies.Value);
             }
-            this.EarliestPeriodChangedSinceLastSimulation = Math.Min(other.EarliestPeriodChangedSinceLastSimulation, this.PlanningPeriods + 1);
 
             for (int periodIndex = 0; periodIndex < copyablePeriods; ++periodIndex)
             {
@@ -284,7 +286,6 @@ namespace Osu.Cof.Ferm.Organon
             // Since simulation is computationally expensive, the current implementation is lazy and relies on triggers to simulate only on demand. In 
             // particular, in single entry cases no stand modification occurs before the target harvest period and, therefore, periods 1...entry - 1 need
             // to be simulated only once.
-            // TODO: make tree selection logic smart enough to track the earliest period needing resimulation
             bool periodNeedsSimulation = this.StandByPeriod[1] == null; // stands not yet simulated have nulls in StandByPeriod
 
             float[]? crownCompetitionByHeight = null;
@@ -294,14 +295,16 @@ namespace Osu.Cof.Ferm.Organon
             {
                 OrganonStandDensity standDensity = this.DensityByPeriod[periodIndex - 1];
 
-                // if treatments apply to this period, they may or may not have changed the tree selection
+                // if treatments apply to this period, they may have already changed the tree selection or may change it in ApplyToPeriod()
                 // In individual tree selection cases, tree selection will have been modified by a heuristic (in GRASP solution construction, by 
                 // local search, by evolutionary operators, or some other mechanism) before this function is called. In thinning by prescription
-                // tree selection occurs when the treatment is applied, likely resulting in a change.
-                if (this.Treatments.ApplyToPeriod(periodIndex, this))
-                {
-                    periodNeedsSimulation |= this.EarliestPeriodChangedSinceLastSimulation == periodIndex;
-                }
+                // tree selection occurs when the treatment is applied, likely resulting in a change. In either case, manipulation of tree
+                // selection will the earliest period changed to this period.
+                // It is also possible the tree selection has not unchanged, either because the treatments choose not to manipulate trees or
+                // because there are no treatments, but the period needs to be simulated because this stand trajectory was copied from a shorter
+                // trajectory and hasn't yet been extended to its last planning period.
+                this.Treatments.ApplyToPeriod(periodIndex, this);
+                periodNeedsSimulation |= this.EarliestPeriodChangedSinceLastSimulation == periodIndex;
 
                 if (periodNeedsSimulation)
                 {
@@ -380,6 +383,7 @@ namespace Osu.Cof.Ferm.Organon
                 }
             }
 
+            Debug.Assert(this.StandByPeriod[this.PlanningPeriods - 1] != null); // check for complete simulation
             this.EarliestPeriodChangedSinceLastSimulation = this.PlanningPeriods;
             return growthModelEvaulations;
         }

@@ -56,6 +56,10 @@ namespace Osu.Cof.Ferm.Heuristics
 
         public override string GetName()
         {
+            if (this.IsStochastic)
+            {
+                return "FirstCircularStochastic";
+            }
             return "FirstCircular";
         }
 
@@ -93,7 +97,7 @@ namespace Osu.Cof.Ferm.Heuristics
                 //   1) The tree is harvested using the first period listed and can only be shifted to a later harvest index.
                 //   2) The tree is harvested using the last period listed and can only be shifted to an earlier harvest index.
                 //   3) There are two or more thins and the tree is currently assigned to a middle index, so can be shifted in both directions.
-                // TODO: in the third case, evaluate strategies for guessing which shift direction to try first
+                // TODO: in the third case, evaluate strategies for guessing which direction to try first
                 moveState.TreeIndex = moveState.UncompactedTreeIndices[sourceTreeIndex];
                 int currentPeriodIndex = moveState.UncompactedPeriodIndices[moveState.TreeIndex];
                 bool canDecrementPeriodIndex = currentPeriodIndex > 0;
@@ -125,12 +129,6 @@ namespace Osu.Cof.Ferm.Heuristics
             stopwatch.Stop();
             moveState.PerfCounters.Duration = stopwatch.Elapsed;
             return moveState.PerfCounters;
-        }
-
-        private enum MoveDirection
-        {
-            Increment,
-            Decrement
         }
 
         private class MoveState

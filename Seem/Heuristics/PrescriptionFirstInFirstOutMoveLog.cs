@@ -106,6 +106,11 @@ namespace Osu.Cof.Ferm.Heuristics
             return ",,,,,,,,";
         }
 
+        public void SetPrescription(int move, ThinByPrescription? firstThinPrescription, ThinByPrescription? secondThinPrescription, ThinByPrescription? thirdThinPrescription)
+        {
+            this.SetPrescription(Constant.HeuristicDefault.RotationIndex, Constant.HeuristicDefault.FinancialIndex, move, firstThinPrescription, secondThinPrescription, thirdThinPrescription);
+        }
+
         public void SetPrescription(int rotationIndex, int financialIndex, int move, ThinByPrescription? firstThinPrescription, ThinByPrescription? secondThinPrescription, ThinByPrescription? thirdThinPrescription)
         {
             // update specified discount rate

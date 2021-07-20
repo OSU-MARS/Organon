@@ -23,6 +23,18 @@ namespace Osu.Cof.Ferm.Organon
             return new ThinByIndividualTreeSelection(this.Period);
         }
 
+        public void CopyFrom(IHarvest other)
+        {
+            if (other is ThinByIndividualTreeSelection)
+            {
+                this.Period = other.Period;
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(other));
+            }
+        }
+
         public float EvaluateTreeSelection(OrganonStandTrajectory trajectory)
         {
             float basalAreaRemoved = 0.0F;

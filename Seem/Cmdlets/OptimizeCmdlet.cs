@@ -16,7 +16,7 @@ namespace Osu.Cof.Ferm.Cmdlets
     public abstract class OptimizeCmdlet<TParameters> : Cmdlet where TParameters : HeuristicParameters
     {
         [Parameter]
-        [ValidateRange(1, Int32.MaxValue)]
+        [ValidateRange(1, 10000)]
         public int BestOf { get; set; }
 
         [Parameter]
@@ -60,6 +60,7 @@ namespace Osu.Cof.Ferm.Cmdlets
         public List<int> ThirdThinPeriod { get; set; }
 
         [Parameter]
+        [ValidateRange(1, 100)]
         public int Threads { get; set; }
 
         [Parameter]
@@ -73,13 +74,13 @@ namespace Osu.Cof.Ferm.Cmdlets
             this.Threads = Environment.ProcessorCount / 2; // assume all cores are hyperthreaded
 
             this.Financial = FinancialScenarios.Default;
-            this.FirstThinPeriod = new List<int>() { Constant.DefaultThinningPeriod };
-            this.PlanningPeriods = new List<int>() { Constant.DefaultPlanningPeriods };
-            this.ConstructionGreediness = new List<float>() { Constant.Grasp.DefaultMinimumConstructionGreedinessForMaximization };
-            this.InitialThinningProbability = new List<float>() { Constant.HeuristicDefault.InitialThinningProbability };
-            this.SecondThinPeriod = new List<int>() { Constant.NoThinPeriod };
+            this.FirstThinPeriod = new() { Constant.DefaultThinningPeriod };
+            this.PlanningPeriods = new() { Constant.DefaultPlanningPeriods };
+            this.ConstructionGreediness = new() { Constant.Grasp.DefaultMinimumConstructionGreedinessForMaximization };
+            this.InitialThinningProbability = new() { Constant.HeuristicDefault.InitialThinningProbability };
+            this.SecondThinPeriod = new() { Constant.NoThinPeriod };
             this.SolutionPoolSize = Constant.DefaultSolutionPoolSize;
-            this.ThirdThinPeriod = new List<int>() { Constant.NoThinPeriod };
+            this.ThirdThinPeriod = new() { Constant.NoThinPeriod };
             this.TimberObjective = TimberObjective.LandExpectationValue;
             this.TreeModel = TreeModel.OrganonNwo;
         }
@@ -133,8 +134,18 @@ namespace Osu.Cof.Ferm.Cmdlets
             List<HeuristicParameters> parameterCombinations = new();
             foreach (float constructionGreediness in this.ConstructionGreediness)
             {
+                if ((constructionGreediness < Constant.Grasp.FullyRandomConstructionForMaximization) || (constructionGreediness > Constant.Grasp.FullyGreedyConstructionForMaximization))
+                {
+                    throw new ParameterOutOfRangeException(nameof(this.ConstructionGreediness));
+                }
+
                 foreach (float thinningProbability in this.InitialThinningProbability)
                 {
+                    if ((thinningProbability < 0.0F) || (thinningProbability > 1.0F))
+                    {
+                        throw new ParameterOutOfRangeException(nameof(this.InitialThinningProbability));
+                    }
+
                     parameterCombinations.Add(new HeuristicParameters()
                     {
                         MinimumConstructionGreediness = constructionGreediness,
@@ -222,6 +233,34 @@ namespace Osu.Cof.Ferm.Cmdlets
 
         protected override void ProcessRecord()
         {
+            if (this.ConstructionGreediness.Count < 1)
+            {
+                throw new ParameterOutOfRangeException(nameof(this.ConstructionGreediness));
+            }
+            if (this.Financial.Count < 1)
+            {
+                throw new ParameterOutOfRangeException(nameof(this.Financial));
+            }
+            if (this.FirstThinPeriod.Count < 1)
+            {
+                throw new ParameterOutOfRangeException(nameof(this.FirstThinPeriod));
+            }
+            if (this.InitialThinningProbability.Count < 1)
+            {
+                throw new ParameterOutOfRangeException(nameof(this.InitialThinningProbability));
+            }
+            if (this.PlanningPeriods.Count < 1)
+            {
+                throw new ParameterOutOfRangeException(nameof(this.PlanningPeriods));
+            }
+            if (this.SecondThinPeriod.Count < 1)
+            {
+                throw new ParameterOutOfRangeException(nameof(this.SecondThinPeriod));
+            }
+            if (this.ThirdThinPeriod.Count < 1)
+            {
+                throw new ParameterOutOfRangeException(nameof(this.ThirdThinPeriod));
+            }
             if ((this.TimberObjective == TimberObjective.ScribnerVolume) && (this.Financial.Count > 1) && (this.HeuristicEvaluatesAcrossPlanningPeriodsAndDiscountRates == false))
             {
                 // low priority to improve this but at least warn about limited support
@@ -385,13 +424,20 @@ namespace Osu.Cof.Ferm.Cmdlets
 
                                             for (int financialIndex = 0; financialIndex < this.Financial.Count; ++financialIndex)
                                             {
-                                                HeuristicResultPosition assimilationPosition = new(position) // must be new each time to populate results.CombinationsEvaluated
+                                                HeuristicResultPosition evaluatedPosition = new(position) // must be new each time to populate results.CombinationsEvaluated
                                                 {
                                                     FinancialIndex = financialIndex,
                                                     RotationIndex = rotationIndex
                                                 };
 
-                                                results.AssimilateHeuristicRunIntoPosition(currentHeuristic, perfCountersToAssmilate, assimilationPosition);
+                                                results.AssimilateHeuristicRunIntoPosition(currentHeuristic, perfCountersToAssmilate, evaluatedPosition);
+                                                if (runWithinCombination == this.BestOf - 1)
+                                                {
+                                                    // last run in combination adds the evaluated positions to CombinationsEvaluated
+                                                    // The evaluated position is added because it is specific to a particular rotation and
+                                                    // financial scenario. In this case the heuristic position spans rotations and scenarios.
+                                                    results.AddEvaluatedPosition(evaluatedPosition);
+                                                }
 
                                                 if (perfCountersLogged == false)
                                                 {
@@ -405,12 +451,11 @@ namespace Osu.Cof.Ferm.Cmdlets
                                     {
                                         // heuristic is specific to a single discount rate
                                         results.AssimilateHeuristicRunIntoPosition(currentHeuristic, perfCounters, position);
-                                    }
-
-                                    if (runWithinCombination == this.BestOf - 1)
-                                    {
-                                        // last run in combination adds the position to CombinationsEvaluated
-                                        results.CombinationsEvaluated.Add(position);
+                                        if (runWithinCombination == this.BestOf - 1)
+                                        {
+                                            // last run in combination adds the position to CombinationsEvaluated
+                                            results.AddEvaluatedPosition(position);
+                                        }
                                     }
 
                                     totalPerfCounters += perfCounters;
@@ -492,12 +537,12 @@ namespace Osu.Cof.Ferm.Cmdlets
                 });
             }
 
-            if (results.CombinationsEvaluated.Count == 1)
+            if (results.PositionsEvaluated.Count == 1)
             {
-                HeuristicResultPosition firstPosition = results.CombinationsEvaluated[0];
+                HeuristicResultPosition firstPosition = results.PositionsEvaluated[0];
                 this.WriteSingleDistributionSummary(results[firstPosition], totalPerfCounters, stopwatch.Elapsed);
             }
-            else if (results.CombinationsEvaluated.Count > 1)
+            else if (results.PositionsEvaluated.Count > 1)
             {
                 this.WriteMultipleDistributionSummary(results, totalPerfCounters, stopwatch.Elapsed);
             }
@@ -513,8 +558,8 @@ namespace Osu.Cof.Ferm.Cmdlets
 
             this.WriteVerbose("{0}: {1} configurations with {2} runs in {3:0.00} minutes ({4:0.00}M timesteps in {5:0.00} core-minutes, {6:0.00}% move acceptance, {7} solutions pooled, {8:0.00}% pool acceptance).",
                               this.GetName(),
-                              results.CombinationsEvaluated.Count,
-                              this.BestOf * results.CombinationsEvaluated.Count,
+                              results.PositionsEvaluated.Count,
+                              this.BestOf * results.PositionsEvaluated.Count,
                               elapsedTime.TotalMinutes,
                               1E-6F * totalPerfCounters.GrowthModelTimesteps,
                               totalPerfCounters.Duration.TotalMinutes,

@@ -21,12 +21,12 @@ namespace Osu.Cof.Ferm.Data
         private int heightColumnIndex;
         private float heightScaleFactor;
         private int plotColumnIndex;
-        private readonly List<int> plotIDs;
+        private readonly IList<int> plotIDs;
         private int speciesColumnIndex;
         private int treeColumnIndex;
         private int treeConditionColumnIndex;
 
-        public PlotsWithHeight(List<int> plotIDs)
+        public PlotsWithHeight(IList<int> plotIDs)
         {
             if (plotIDs.Count < 1)
             {
@@ -49,7 +49,7 @@ namespace Osu.Cof.Ferm.Data
             this.treeConditionColumnIndex = -1;
         }
 
-        public PlotsWithHeight(List<int> plotIDs, float defaultExpansionFactor)
+        public PlotsWithHeight(IList<int> plotIDs, float defaultExpansionFactor)
             : this(plotIDs)
         {
             if ((defaultExpansionFactor <= 0.0F) || (defaultExpansionFactor > Constant.Maximum.ExpansionFactor))

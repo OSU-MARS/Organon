@@ -9,37 +9,46 @@ namespace Osu.Cof.Ferm.Cmdlets
     public class OptimizeGenetic : OptimizeCmdlet<GeneticParameters>
     {
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0, 1.0)]
         public List<float> CrossoverProbabilityEnd { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0, 1.0)]
         public List<float> ExchangeProbabilityEnd { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(-20.0, 0.0)]
         public List<float> ExponentK { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0, 10.0)]
         public List<float> FlipProbabilityEnd { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0, Single.MaxValue)]
         public List<float> GenerationMultiplier { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(1, Int32.MaxValue)]
         public List<int> InitializationClasses { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         public List<PopulationInitializationMethod> InitializationMethod { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0, Single.MaxValue)]
         public List<float> MinCoefficientOfVariation { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(1, Int32.MaxValue)]
         public List<int> PopulationSize { get; set; }
 
@@ -47,22 +56,23 @@ namespace Osu.Cof.Ferm.Cmdlets
         public PopulationReplacementStrategy ReplacementStrategy { get; set; }
 
         [Parameter]
+        [ValidateNotNullOrEmpty]
         [ValidateRange(0.0, 1.0)]
         public List<float> ReservedProportion { get; set; }
 
         public OptimizeGenetic()
         {
-            this.CrossoverProbabilityEnd = new List<float>() { Constant.GeneticDefault.CrossoverProbabilityEnd };
-            this.ExchangeProbabilityEnd = new List<float>() { Constant.GeneticDefault.ExchangeProbabilityEnd };
-            this.ExponentK = new List<float>() { Constant.GeneticDefault.ExponentK };
-            this.FlipProbabilityEnd = new List<float>() { Constant.GeneticDefault.FlipProbabilityEnd };
-            this.GenerationMultiplier = new List<float>() { Constant.GeneticDefault.GenerationMultiplier };
-            this.InitializationClasses = new List<int>() { Constant.GeneticDefault.InitializationClasses };
-            this.InitializationMethod = new List<PopulationInitializationMethod> { Constant.GeneticDefault.InitializationMethod };
-            this.MinCoefficientOfVariation = new List<float>() { Constant.GeneticDefault.MinimumCoefficientOfVariation };
-            this.PopulationSize = new List<int>() { Constant.GeneticDefault.PopulationSize };
+            this.CrossoverProbabilityEnd = new() { Constant.GeneticDefault.CrossoverProbabilityEnd };
+            this.ExchangeProbabilityEnd = new() { Constant.GeneticDefault.ExchangeProbabilityEnd };
+            this.ExponentK = new() { Constant.GeneticDefault.ExponentK };
+            this.FlipProbabilityEnd = new() { Constant.GeneticDefault.FlipProbabilityEnd };
+            this.GenerationMultiplier = new() { Constant.GeneticDefault.GenerationMultiplier };
+            this.InitializationClasses = new() { Constant.GeneticDefault.InitializationClasses };
+            this.InitializationMethod = new() { Constant.GeneticDefault.InitializationMethod };
+            this.MinCoefficientOfVariation = new() { Constant.GeneticDefault.MinimumCoefficientOfVariation };
+            this.PopulationSize = new() { Constant.GeneticDefault.PopulationSize };
             this.ReplacementStrategy = Constant.GeneticDefault.ReplacementStrategy;
-            this.ReservedProportion = new List<float>() { Constant.GeneticDefault.ReservedPopulationProportion };
+            this.ReservedProportion = new() { Constant.GeneticDefault.ReservedPopulationProportion };
         }
 
         protected override Heuristic<GeneticParameters> CreateHeuristic(GeneticParameters heuristicParameters, RunParameters runParameters)

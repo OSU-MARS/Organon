@@ -39,6 +39,7 @@ namespace Osu.Cof.Ferm.Organon
                 {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
+                Debug.Assert(Single.IsNaN(value) == false);
                 this.fromAbovePercentage = value; 
             }
         }
@@ -55,6 +56,7 @@ namespace Osu.Cof.Ferm.Organon
                 {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
+                Debug.Assert(Single.IsNaN(value) == false);
                 this.fromBelowPercentage = value;
             }
         }
@@ -71,6 +73,7 @@ namespace Osu.Cof.Ferm.Organon
                 {
                     throw new ArgumentOutOfRangeException(nameof(value));
                 }
+                Debug.Assert(Single.IsNaN(value) == false);
                 this.proportionalPercentage = value;
             }
         }
@@ -83,6 +86,27 @@ namespace Osu.Cof.Ferm.Organon
                 ProportionalPercentage = this.ProportionalPercentage, 
                 fromBelowPercentage = this.FromBelowPercentage
             };
+        }
+
+        public void CopyFrom(IHarvest other)
+        {
+            if (other is ThinByIndividualTreeSelection thinByIndividualTreeSelection)
+            {
+                // this is, for now, just a stub to enable test cases so only flow period
+                // If needed, APIs can be created to calculate approximate above, proportional, and below percentages from the tree selection.
+                this.Period = thinByIndividualTreeSelection.Period;
+            }
+            else if (other is ThinByPrescription thinByPrescription)
+            {
+                this.FromAbovePercentage = thinByPrescription.FromAbovePercentage;
+                this.FromBelowPercentage = thinByPrescription.FromBelowPercentage;
+                this.Period = thinByPrescription.Period;
+                this.ProportionalPercentage = thinByPrescription.ProportionalPercentage;
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(other));
+            }
         }
 
         public float EvaluateTreeSelection(OrganonStandTrajectory trajectory)

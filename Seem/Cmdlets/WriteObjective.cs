@@ -1,5 +1,4 @@
 ﻿using Osu.Cof.Ferm.Heuristics;
-using Osu.Cof.Ferm.Organon;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,7 +24,7 @@ namespace Osu.Cof.Ferm.Cmdlets
 
         protected override void ProcessRecord()
         {
-            if (this.Results!.CombinationsEvaluated.Count < 1)
+            if (this.Results!.PositionsEvaluated.Count < 1)
             {
                 throw new ParameterOutOfRangeException(nameof(this.Results));
             }
@@ -35,7 +34,7 @@ namespace Osu.Cof.Ferm.Cmdlets
             // for now, perform no reduction when Object.ReferenceEquals(lowSolution, highSolution) is true
             if (this.ShouldWriteHeader())
             {
-                HeuristicResultPosition position = this.Results.CombinationsEvaluated[0];
+                HeuristicResultPosition position = this.Results.PositionsEvaluated[0];
                 HeuristicSolutionPool solution = this.Results[position].Pool;
                 if ((solution.High == null) || (solution.Low == null))
                 {
@@ -67,9 +66,9 @@ namespace Osu.Cof.Ferm.Cmdlets
 
             // sort each discount rate's runs by decreasing objective function value  
             List<List<(float, HeuristicResultPosition)>> solutionsByFinancialIndexAndValue = new();
-            for (int positionIndex = 0; positionIndex < this.Results.CombinationsEvaluated.Count; ++positionIndex)
+            for (int positionIndex = 0; positionIndex < this.Results.PositionsEvaluated.Count; ++positionIndex)
             {
-                HeuristicResultPosition position = this.Results.CombinationsEvaluated[positionIndex];
+                HeuristicResultPosition position = this.Results.PositionsEvaluated[positionIndex];
                 HeuristicResult result = this.Results[position];
                 HeuristicObjectiveDistribution distribution = result.Distribution;
                 int maxFinancialIndex = position.FinancialIndex;

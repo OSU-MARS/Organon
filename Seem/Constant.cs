@@ -197,13 +197,15 @@ namespace Osu.Cof.Ferm
             public const int StopAfter = 19;
         }
 
-        public static class PrescriptionEnumerationDefault
+        public static class PrescriptionSearchDefault
         {
-            public static float DefaultIntensityStepSize = 5.0F;
-            public static float MaximumIntensity = 80.0F;
-            public static float MaximumIntensityStepSize = 100.0F; // default to no limiting by percentage
-            public static float MinimumIntensity = 20.0F;
-            public static PrescriptionUnits Units = PrescriptionUnits.StemPercentageRemoved;
+            public const float DefaultIntensityStepSize = 8.0F; // loose optimum for coordinate ascent solution quality given minimum step of 1%
+            public const float MaximumIntensity = 80.0F;
+            public const float MaximumIntensityStepSize = 100.0F; // default to no limiting by percentage
+            public const float MinimumIntensity = 20.0F;
+            public const float MinimumIntensityStepSize = 1.0F;
+            public const float StepSizeMultiplier = 0.5F;
+            public const PrescriptionUnits Units = PrescriptionUnits.StemPercentageRemoved;
         }
 
         public static class OpenXml
@@ -250,11 +252,11 @@ namespace Osu.Cof.Ferm
 
             public static class TreeStatus
             {
-                public static readonly int Dead = 6;
-                public static readonly int Fused = 3;
-                public static readonly int Ingrowth = 2;
-                public static readonly int Live = 1;
-                public static readonly int NotFound = 9;
+                public const int Dead = 6;
+                public const int Fused = 3;
+                public const int Ingrowth = 2;
+                public const int Live = 1;
+                public const int NotFound = 9;
             }
         }
 

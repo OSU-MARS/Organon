@@ -8,6 +8,7 @@ namespace Osu.Cof.Ferm.Cmdlets
     public class GetStandTrajectory : Cmdlet
     {
         [Parameter]
+        [ValidateNotNullOrEmpty]
         public string? Name { get; set; }
 
         [Parameter]

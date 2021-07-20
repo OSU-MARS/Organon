@@ -16,7 +16,7 @@ namespace Osu.Cof.Ferm.Cmdlets
         protected override void ProcessRecord()
         {
             Debug.Assert(this.Results != null);
-            if (this.Results.CombinationsEvaluated.Count < 1)
+            if (this.Results.PositionsEvaluated.Count < 1)
             {
                 throw new ParameterOutOfRangeException(nameof(this.Results));
             }
@@ -28,9 +28,9 @@ namespace Osu.Cof.Ferm.Cmdlets
             }
 
             long maxFileSizeInBytes = this.GetMaxFileSizeInBytes();
-            for (int positionIndex = 0; positionIndex < this.Results!.CombinationsEvaluated.Count; ++positionIndex)
+            for (int positionIndex = 0; positionIndex < this.Results!.PositionsEvaluated.Count; ++positionIndex)
             {
-                HeuristicResultPosition position = this.Results!.CombinationsEvaluated[positionIndex];
+                HeuristicResultPosition position = this.Results!.PositionsEvaluated[positionIndex];
                 HeuristicSolutionPool solutions = this.Results[position].Pool;
                 string heuristicAndPosition = WriteCmdlet.GetHeuristicAndPositionCsvValues(solutions, this.Results, position);
 

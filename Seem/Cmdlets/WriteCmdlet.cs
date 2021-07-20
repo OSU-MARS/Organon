@@ -34,7 +34,7 @@ namespace Osu.Cof.Ferm.Cmdlets
         {
             Debug.Assert(results != null);
 
-            Heuristic? highHeuristic = results[results.CombinationsEvaluated[0]].Pool.High;
+            Heuristic? highHeuristic = results[results.PositionsEvaluated[0]].Pool.High;
             if (highHeuristic == null)
             {
                 throw new NotSupportedException("Can't obtain heuristic parameters.");

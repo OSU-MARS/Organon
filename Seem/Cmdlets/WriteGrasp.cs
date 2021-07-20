@@ -28,7 +28,7 @@ namespace Osu.Cof.Ferm.Cmdlets
             }
 
             // rows for bin counts
-            HeuristicResultPosition position = this.Results.CombinationsEvaluated[0];
+            HeuristicResultPosition position = this.Results.PositionsEvaluated[0];
             HeuristicSolutionPool solutions = this.Results[position].Pool;
             if (solutions.High == null)
             {

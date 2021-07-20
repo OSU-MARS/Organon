@@ -31,7 +31,7 @@ namespace Osu.Cof.Ferm.Cmdlets
         public HeuristicResults? Results { get; set; }
 
         [Parameter]
-        [ValidateNotNull]
+        [ValidateNotNullOrEmpty]
         public List<OrganonStandTrajectory>? Trajectories { get; set; }
 
         public WriteStandTrajectory()
@@ -47,25 +47,27 @@ namespace Osu.Cof.Ferm.Cmdlets
         {
             OrganonStandTrajectory highTrajectory;
             HeuristicParameters? heuristicParameters = null;
+            string scenarioName;
             if (this.Results != null)
             {
-                HeuristicResultPosition position = this.Results.CombinationsEvaluated[positionOrTrajectoryIndex];
+                HeuristicResultPosition position = this.Results.PositionsEvaluated[positionOrTrajectoryIndex];
                 HeuristicSolutionPool solutionPool = this.Results[position].Pool;
                 if (solutionPool.High == null)
                 {
                     throw new NotSupportedException("Run " + positionOrTrajectoryIndex + " is missing a high solution.");
                 }
                 highTrajectory = solutionPool.High.GetBestTrajectoryWithDefaulting(position);
-                financialIndex = position.FinancialIndex;
                 endOfRotationPeriod = this.Results.RotationLengths[position.RotationIndex];
+                financialIndex = position.FinancialIndex;
+                scenarioName = this.Results.FinancialScenarios.Name[financialIndex];
             }
             else
             {
                 highTrajectory = this.Trajectories![positionOrTrajectoryIndex];
-                // for now, default to writing a trajectory with the default discount rate
-                // TODO: support logging of trajectory financials with multiple discount rates
-                financialIndex = Constant.HeuristicDefault.FinancialIndex;
                 endOfRotationPeriod = highTrajectory.PlanningPeriods - 1;
+                financialIndex = Constant.HeuristicDefault.FinancialIndex;
+                scenarioName = this.Financial.Name[financialIndex];
+                // TODO: support logging of trajectory financials with multiple discount rates
             }
             if (highTrajectory.Heuristic != null)
             {
@@ -104,7 +106,6 @@ namespace Osu.Cof.Ferm.Cmdlets
 
             int rotationLengthAsInteger = highTrajectory.GetEndOfPeriodAge(endOfRotationPeriod);
             string rotationLength = rotationLengthAsInteger.ToString(CultureInfo.InvariantCulture);
-            string scenarioName = this.Financial.Name[financialIndex];
 
             linePrefix.Append(firstThinAge + "," + secondThinAge + "," + thirdThinAge + "," + rotationLength + "," + scenarioName);
             return highTrajectory;
@@ -134,11 +135,12 @@ namespace Osu.Cof.Ferm.Cmdlets
             }
 
             // rows for periods
+            FinancialScenarios financialScenarios = this.Results != null ? this.Results.FinancialScenarios : this.Financial;
             long maxFileSizeInBytes = this.GetMaxFileSizeInBytes();
-            int maxDistributionOrTrajectoryIndex = resultsSpecified ? this.Results!.CombinationsEvaluated.Count : this.Trajectories!.Count;
-            for (int distributionOrTrajectoryIndex = 0; distributionOrTrajectoryIndex < maxDistributionOrTrajectoryIndex; ++distributionOrTrajectoryIndex)
+            int maxDistributionOrTrajectoryIndex = resultsSpecified ? this.Results!.PositionsEvaluated.Count : this.Trajectories!.Count;
+            for (int positionOrTrajectoryIndex = 0; positionOrTrajectoryIndex < maxDistributionOrTrajectoryIndex; ++positionOrTrajectoryIndex)
             {
-                OrganonStandTrajectory highTrajectory = this.GetHighestTrajectoryAndLinePrefix(distributionOrTrajectoryIndex, out StringBuilder linePrefix, out int endOfRotationPeriod, out int financialIndex);
+                OrganonStandTrajectory highTrajectory = this.GetHighestTrajectoryAndLinePrefix(positionOrTrajectoryIndex, out StringBuilder linePrefix, out int endOfRotationPeriod, out int financialIndex);
                 Units trajectoryUnits = highTrajectory.GetUnits();
                 if (trajectoryUnits != Units.English)
                 {
@@ -184,13 +186,13 @@ namespace Osu.Cof.Ferm.Cmdlets
                     float treesPerHectareDecrease = Constant.AcresPerHectare * treesPerAcreDecrease;
 
                     // NPV and LEV
-                    float thinNetPresentValue = this.Financial.GetNetPresentThinningValue(highTrajectory, financialIndex, period, out float thin2SawNpv, out float thin3SawNpv, out float thin4SawNpv);
+                    float thinNetPresentValue = financialScenarios.GetNetPresentThinningValue(highTrajectory, financialIndex, period, out float thin2SawNpv, out float thin3SawNpv, out float thin4SawNpv);
                     totalThinNetPresentValue += thinNetPresentValue;
-                    float standingNetPresentValue = this.Financial.GetNetPresentRegenerationHarvestValue(highTrajectory, financialIndex, period, out float standing2SawNpv, out float standing3SawNpv, out float standing4SawNpv);
-                    float reforestationNetPresentValue = this.Financial.GetNetPresentReforestationValue(financialIndex, highTrajectory.PlantingDensityInTreesPerHectare);
+                    float standingNetPresentValue = financialScenarios.GetNetPresentRegenerationHarvestValue(highTrajectory, financialIndex, period, out float standing2SawNpv, out float standing3SawNpv, out float standing4SawNpv);
+                    float reforestationNetPresentValue = financialScenarios.GetNetPresentReforestationValue(financialIndex, highTrajectory.PlantingDensityInTreesPerHectare);
                     float periodNetPresentValue = totalThinNetPresentValue + standingNetPresentValue + reforestationNetPresentValue;
 
-                    float presentToFutureConversionFactor = this.Financial.GetAppreciationFactor(financialIndex, highTrajectory.GetEndOfPeriodAge(endOfRotationPeriod));
+                    float presentToFutureConversionFactor = financialScenarios.GetAppreciationFactor(financialIndex, highTrajectory.GetEndOfPeriodAge(endOfRotationPeriod));
                     float landExpectationValue = presentToFutureConversionFactor * periodNetPresentValue / (presentToFutureConversionFactor - 1.0F);
 
                     // pond NPV by grade
@@ -255,7 +257,7 @@ namespace Osu.Cof.Ferm.Cmdlets
             {
                 throw new ParameterOutOfRangeException(nameof(this.Trajectories), "Both " + nameof(this.Results) + " and " + nameof(this.Trajectories) + " are specified. Specify one or the other.");
             }
-            if ((this.Results != null) && (this.Results.CombinationsEvaluated.Count < 1))
+            if ((this.Results != null) && (this.Results.PositionsEvaluated.Count < 1))
             {
                 throw new ParameterOutOfRangeException(nameof(this.Results), nameof(this.Results) + " is empty. At least one run must be present.");
             }
